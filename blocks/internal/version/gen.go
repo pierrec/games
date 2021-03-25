@@ -25,13 +25,14 @@ func main() {
 	var vshort, vlong string
 	vlong = gitDescribe()
 	if !strings.HasPrefix(vlong, "v") {
-		commit := gitLastCommit()
-		utc, err := strconv.Atoi(gitLastCommitDate())
-		check(err)
-		t := time.Unix(int64(utc), 0)
-		d := fmt.Sprintf("%d%02d%02d%02d%02d%02d", t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second())
-		vlong = fmt.Sprintf("v0.0.0-%s-%s", d, string(commit[:commitLen]))
+		vlong = "v0.0.0"
 	}
+	commit := gitLastCommit()
+	utc, err := strconv.Atoi(gitLastCommitDate())
+	check(err)
+	t := time.Unix(int64(utc), 0)
+	d := fmt.Sprintf("%d%02d%02d%02d%02d%02d", t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second())
+	vlong = fmt.Sprintf("%s-%s-%s", vlong, d, string(commit[:commitLen]))
 	i := strings.IndexByte(vlong, '-')
 	vshort = vlong[:i]
 	check(ioutil.WriteFile(short, []byte(vshort), 0644))
