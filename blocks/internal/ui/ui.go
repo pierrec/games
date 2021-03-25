@@ -205,7 +205,6 @@ func (ui *UI) loadConfig() (err error) {
 	var cfg config
 	switch {
 	case err == nil:
-	case os.IsNotExist(err):
 		defer f.Close()
 		bts, err := io.ReadAll(f)
 		if err != nil {
@@ -214,6 +213,7 @@ func (ui *UI) loadConfig() (err error) {
 		if err := json.Unmarshal(bts, &cfg); err != nil {
 			return err
 		}
+	case os.IsNotExist(err):
 	default:
 		return err
 	}
