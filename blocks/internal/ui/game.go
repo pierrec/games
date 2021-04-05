@@ -41,22 +41,22 @@ const (
 )
 
 type lines struct {
-	First int
-	Last  int
+	// Lines contains the position of full lines in ascending order.
+	Lines []int
 	anim  widgets.Anim
 }
 
 func (l *lines) next(pos int) (int, time.Duration) {
-	pos += 2 * (l.Last - l.First)
+	pos += 2 * len(l.Lines)
 	d := math.Sqrt(float64(pos))
 	return pos, time.Duration(d)
 }
 
-func (l *lines) Start(n int) {
+func (l *lines) Start(height int) {
 	if l.anim.Next == nil {
 		l.anim.Next = l.next
 	}
-	l.anim.Start(1, (l.Last-l.First)*n)
+	l.anim.Start(1, len(l.Lines)*height)
 }
 
 func (l *lines) Animate(gtx layout.Context) (pos int, done bool) {
@@ -208,34 +208,25 @@ func (ui *game) Update(softDrop int) {
 
 func (ui *game) checkFullLines() {
 	// Detect full lines.
-	area := ui.area.Slice(
-		image.Pt(0, 1), // hide the first line
-		ui.area.Size(),
-	)
-
 	pos := ui.current.Pos()
-	start, end := -1, -1                  // indexes of the first and last full lines.
-	sz := area.Size().Sub(image.Pt(1, 1)) // with left and bottom wall correction
+	lines := ui.lines.Lines[:0]
+	sz := ui.area.Size().Sub(image.Pt(1, 1)) // with left and bottom wall correction
 	xn := sz.X
 	_, h := ui.current.Dims()
 	yn := min(pos.Y+h, sz.Y)
 fullLoop:
 	for y := pos.Y; y < yn; y++ {
 		for x := 1; x < xn; x++ {
-			if area.Get(x, y) == transparentT {
+			if ui.area.Get(x, y) == transparentT {
 				continue fullLoop
 			}
 		}
 		// Full line!
-		if start < 0 {
-			start = y
-		}
-		end = y + 1
+		lines = append(lines, y)
 	}
-	if start >= 0 {
+	if len(lines) > 0 {
 		ui.state = gameFullLines
-		ui.lines.First = start
-		ui.lines.Last = end
+		ui.lines.Lines = lines
 	}
 }
 
@@ -387,9 +378,8 @@ func (ui *game) animate(gtx layout.Context) {
 	if ui.state != gameLineAnim {
 		return
 	}
-	start := ui.lines.First
-	end := ui.lines.Last
-	num := end - start
+	num := len(ui.lines.Lines)
+	end := ui.lines.Lines[num-1]
 	if pos, done := ui.lines.Animate(gtx); !done {
 		cell := ui.area.CellSize()
 		xn := ui.area.Size().X
@@ -407,13 +397,15 @@ func (ui *game) animate(gtx layout.Context) {
 	ui.unpause()
 	// Move down all non empty lines before start by end-start amount.
 	xn := ui.area.Size().X - 1 // left wall correction applied
-	for y := start; y+num >= 0; y-- {
-		for x := 1; x < xn; x++ {
-			t := transparentT
-			if y >= 0 {
-				t = ui.area.Get(x, y)
+	for _, line := range ui.lines.Lines {
+		for y := line; y >= 0; y-- {
+			for x := 1; x < xn; x++ {
+				t := transparentT
+				if y > 0 {
+					t = ui.area.Get(x, y-1)
+				}
+				ui.area.Set(x, y, t)
 			}
-			ui.area.Set(x, y+num, t)
 		}
 	}
 	// Update the score.
