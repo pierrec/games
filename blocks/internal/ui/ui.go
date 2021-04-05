@@ -7,7 +7,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"sync"
 
 	"gioui.org/app"
 	"gioui.org/io/system"
@@ -136,21 +135,12 @@ func (ui *UI) Start(w *app.Window) (err error) {
 				e.Frame(gtx.Ops)
 			}
 		case <-ui.game.Tick():
-			opts.Do(func() {
-				//w.Option(app.Title("HELLO"), app.Size(unit.Dp(700), unit.Dp(1000)))
-				//w.Option(app.MinSize(unit.Dp(500), unit.Dp(600)))
-				//w.Option(app.Size(unit.Dp(700), unit.Dp(1000)))
-				//w.Option(app.Title("HELLO"))
-				fmt.Println("opt changed")
-			})
 			ui.game.Update(0)
 			w.Invalidate()
 		}
 	}
 	return nil
 }
-
-var opts sync.Once
 
 func (ui *UI) saveConfig() (err error) {
 	dir, err := app.DataDir()

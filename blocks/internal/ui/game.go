@@ -286,7 +286,7 @@ func (ui *game) update(gtx layout.Context, evs []event.Event) {
 			Types: pointer.Move | pointer.Press,
 		}.Add(gtx.Ops)
 		//TODO on Linux, the cursor is kept hidden when moving out of the app window
-		ptr := pointer.CursorNone
+		ptr := pointer.CursorDefault
 		for _, ev := range evs {
 			switch e := ev.(type) {
 			case key.Event:
