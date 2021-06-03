@@ -15,7 +15,7 @@ func main() {
 		w := app.NewWindow(
 			app.Size(unit.Dp(500), unit.Dp(600)),
 			app.Title(ui.TitleName),
-			app.WindowMode(app.Fullscreen),
+			app.Fullscreen,
 		)
 		game := &ui.UI{}
 		if err := game.Start(w); err != nil {
